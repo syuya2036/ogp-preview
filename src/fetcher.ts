@@ -1,9 +1,10 @@
 import { resolveUrl } from './utils';
 
-export async function fetchHtml(url: string): Promise<{ html: string, finalUrl: string }> {
+export async function fetchHtml(url: string): Promise<{ html: string, redirectChain: string[] }> {
 	// Use a standard browser User-Agent to avoid being blocked or treated as a bot
 	const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 	let currentUrl = url;
+	const redirectChain: string[] = [url]; // Track initial URL
 	let redirects = 0;
 	const maxRedirects = 10;
 
@@ -23,6 +24,7 @@ export async function fetchHtml(url: string): Promise<{ html: string, finalUrl: 
 				}
 
 				currentUrl = resolveUrl(currentUrl, location);
+				redirectChain.push(currentUrl); // Add new URL to chain
 				redirects++;
 				continue;
 			}
@@ -34,7 +36,7 @@ export async function fetchHtml(url: string): Promise<{ html: string, finalUrl: 
 			const html = await response.text();
 			return {
 				html,
-				finalUrl: currentUrl
+				redirectChain
 			};
 		} catch (error: any) {
 			if (error.cause && error.cause.code === 'ECONNREFUSED') {

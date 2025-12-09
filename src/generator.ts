@@ -197,62 +197,94 @@ const HTML_TEMPLATE = `
 `;
 
 function escapeHtml(unsafe: string): string {
-	return unsafe
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#039;");
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
-export function generatePreview(data: OgpData, outputPath: string): void {
-	let html = HTML_TEMPLATE;
+export function generatePreview(data: OgpData, redirectChain: string[], outputPath: string): void {
+    let html = HTML_TEMPLATE;
 
-	// Target URL
-	html = html.replace(/\{TARGET_URL\}/g, data.url);
+    // Redirect Chain Display
+    let urlHtml = '';
+    if (redirectChain.length > 1) {
+        urlHtml = '<div class="redirect-chain">';
+        redirectChain.forEach((url, index) => {
+            const isLast = index === redirectChain.length - 1;
+            urlHtml += `<a href="${url}" target="_blank" class="target-url">${url}</a>`;
+            if (!isLast) {
+                urlHtml += ' <span style="color: var(--secondary-text); margin: 0 5px;">→</span> ';
+            }
+        });
+        urlHtml += '</div>';
+    } else {
+        urlHtml = `<a href="${data.url}" target="_blank" class="target-url">${data.url}</a>`;
+    }
 
-	// Image
-	if (data.image) {
-		html = html.replace("{IMAGE_STYLE}", `background-image: url('${data.image}')`);
-		html = html.replace("{NO_IMAGE_TEXT}", "");
-	} else {
-		html = html.replace("{IMAGE_STYLE}", "");
-		html = html.replace("{NO_IMAGE_TEXT}", "No Image");
-	}
+    // Replace the simple placeholder or inject a new one
+    // Note: The template has <a href="{TARGET_URL}" ...>{TARGET_URL}</a>.
+    // We should replace that entire block or make the template generic.
+    // Let's replace the existing single link with our generated HTML.
 
-	// Text
-	html = html.replace("{TITLE}", escapeHtml(data.title));
-	html = html.replace("{DESCRIPTION}", escapeHtml(data.description));
+    // Simplest way: Modify the template to use a generic {URL_DISPLAY} placeholder in Step 1?
+    // Or RegEx replace the existing tag?
+    // Let's blindly replace `{TARGET_URL}` everywhere first, but that breaks the HREF if we want a complex display.
 
-	// Domain
-	let domain = "unknown";
-	try {
-		domain = new URL(data.url).hostname;
-	} catch { }
-	html = html.replace("{DOMAIN}", domain);
+    // Better approach: We will replace the whole link line in the template logic below.
+    // But since I can't easily change the template const without a massive replace,
+    // I will do a trick: I will Replace `<a href="{TARGET_URL}" target="_blank" class="target-url">{TARGET_URL}</a>`
 
-	// Debug Rows (with Priority Sort)
-	const priorityKeys = [
-		"og:title", "og:description", "og:image", "og:url", "og:type", "og:site_name",
-		"twitter:card", "twitter:title", "twitter:description", "twitter:image",
-		"title", "description"
-	];
+    html = html.replace(
+        /<a href="{TARGET_URL}" target="_blank" class="target-url">{TARGET_URL}<\/a>/,
+        urlHtml
+    );
 
-	const keys = Object.keys(data.rawMeta).sort((a, b) => {
-		const aPriority = priorityKeys.indexOf(a);
-		const bPriority = priorityKeys.indexOf(b);
+    // Fallback: If the regex fails (e.g. whitespace diff), just replace {TARGET_URL} with final URL to avoid broken page
+    html = html.replace(/\{TARGET_URL\}/g, data.url);
 
-		if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority;
-		if (aPriority !== -1) return -1;
-		if (bPriority !== -1) return 1;
-		return a.localeCompare(b);
-	});
+    // Image
+    if (data.image) {
+        html = html.replace("{IMAGE_STYLE}", `background-image: url('${data.image}')`);
+        html = html.replace("{NO_IMAGE_TEXT}", "");
+    } else {
+        html = html.replace("{IMAGE_STYLE}", "");
+        html = html.replace("{NO_IMAGE_TEXT}", "No Image");
+    }
 
-	let rows = "";
-	for (const key of keys) {
-		rows += `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(data.rawMeta[key])}</td></tr>`;
-	}
-	html = html.replace("{DEBUG_ROWS}", rows);
+    // Text
+    html = html.replace("{TITLE}", escapeHtml(data.title));
+    html = html.replace("{DESCRIPTION}", escapeHtml(data.description));
 
-	fs.writeFileSync(outputPath, html);
+    // Domain
+    let domain = "unknown";
+    try {
+        domain = new URL(data.url).hostname;
+    } catch { }
+    html = html.replace("{DOMAIN}", domain);
+
+    // Debug Rows (with Priority Sort)
+    const priorityKeys = [
+        "og:title", "og:description", "og:image", "og:url", "og:type", "og:site_name",
+        "twitter:card", "twitter:title", "twitter:description", "twitter:image",
+        "title", "description"
+    ];
+
+    const keys = Object.keys(data.rawMeta).sort((a, b) => {
+        const aPriority = priorityKeys.indexOf(a);
+        const bPriority = priorityKeys.indexOf(b);
+
+        if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority;
+        if (aPriority !== -1) return -1;
+        if (bPriority !== -1) return 1;
+        return a.localeCompare(b);
+    });
+
+    let rows = "";
+    for (const key of keys) {
+        rows += `<tr><td>${escapeHtml(key)}</td><td>${escapeHtml(data.rawMeta[key])}</td></tr>`;
+    }
+    html = html.replace("{DEBUG_ROWS}", rows);
+
+    fs.writeFileSync(outputPath, html);
 }
