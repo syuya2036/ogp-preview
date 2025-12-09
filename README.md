@@ -18,8 +18,8 @@
 
 <div align="center">
   <img src="assets/preview.png" alt="OGP Preview Demo" width="800">
-  <p><em>(Replace this with your actual screenshot)</em></p>
 </div>
+
 ## 📖 Overview
 
 **ogp-preview** is a CLI tool designed for frontend developers and designers. It allows you to preview how your localhost environment or any URL will appear on social media platforms (like X/Twitter) without deploying or using tunneling services like ngrok.
