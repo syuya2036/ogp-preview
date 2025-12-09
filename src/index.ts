@@ -42,17 +42,23 @@ program
 		try {
 			// 1. Fetch
 			console.log("Fetching HTML...");
-			const html = await fetchHtml(targetUrl);
+			const { html, redirectChain } = await fetchHtml(targetUrl);
+			const finalUrl = redirectChain[redirectChain.length - 1];
+
+			if (finalUrl !== targetUrl) {
+				console.log(`Redirected to: ${finalUrl}`);
+				console.log(`Chain: ${redirectChain.join(' -> ')}`);
+			}
 
 			// 2. Parse
 			console.log("Parsing metadata...");
-			const ogpData = parseHtml(html, targetUrl);
+			const ogpData = parseHtml(html, finalUrl);
 
 			// 3. Generate
 			console.log("Generating preview...");
 			const tempFileName = "ogp_preview_temp.html";
 			const tempFilePath = path.resolve(process.cwd(), tempFileName);
-			generatePreview(ogpData, tempFilePath);
+			generatePreview(ogpData, redirectChain, tempFilePath);
 
 			// 4. Open
 			console.log(`Opening in default browser: ${tempFilePath}`);
