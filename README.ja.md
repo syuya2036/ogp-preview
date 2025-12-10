@@ -9,7 +9,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange)](https://www.rust-lang.org)
+[![TypeScript](https://img.shields.io/badge/typescript-5.0%2B-3178c6)](https://www.typescriptlang.org)
 
 [English](README.md) | [日本語](README.ja.md)
 
