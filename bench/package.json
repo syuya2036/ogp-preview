@@ -1,0 +1,30 @@
+{
+  "name": "ogp-bench",
+  "private": true,
+  "type": "module",
+  "description": "Benchmark harness comparing JSX->image rendering engines for OGP generation",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@takumi-rs/core": "^2.13.3",
+    "@takumi-rs/helpers": "^2.13.3",
+    "@takumi-rs/wasm": "^2.13.3",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@vercel/og": "^1.0.2",
+    "playwright-core": "^1.62.1",
+    "react": "^19.2.8",
+    "satori": "^0.33.4",
+    "sharp": "^0.35.4",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "scripts": {
+    "build": "esbuild src/*.ts src/*.tsx src/engines/*.ts --outdir=dist --outbase=src --format=esm --platform=node --target=node22 --jsx=automatic --sourcemap",
+    "bench": "npm run build && node dist/bench.js",
+    "typecheck": "tsc --noEmit",
+    "setup": "node scripts/fetch-assets.mjs"
+  }
+}

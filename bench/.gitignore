@@ -1,0 +1,9 @@
+node_modules/
+dist/
+
+# Rendered images from the last run; regenerate with `npm run bench`.
+out/
+
+# Fetched by `npm run setup` — ~10 MB of third-party binaries.
+assets/fonts/
+assets/photo.jpg
